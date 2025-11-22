@@ -20,20 +20,24 @@ const login = async () => {
       password: password.value
     })
 
-    // ✅ GUARDAR TOKEN
+    // Guardar token en localStorage
     localStorage.setItem('token', response.data.token)
 
-    mensaje.value = response.data.message || '✅ Login exitoso'
-    router.push('/dashboard')
+    // También puedes guardar el usuario si quieres
+    localStorage.setItem('user', response.data.user)
 
+    mensaje.value = response.data.message || '✅ Login exitoso'
+
+    // Redirigir a dashboard
+    router.push('/dashboard')
   } catch {
     mensaje.value = '❌ Usuario o contraseña incorrectos'
   } finally {
     loading.value = false
   }
 }
-
 </script>
+
 
 <template>
   <div class="screen">
