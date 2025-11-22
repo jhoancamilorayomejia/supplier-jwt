@@ -31,5 +31,8 @@ func main() {
 
 	r.POST("/api/login", controllers.Login)
 
+	//para obtener la informacion de los proveedores
+	r.GET("/api/suppliers", controllers.GetSuppliers)
+
 	r.Run(":8080")
 }

@@ -17,22 +17,29 @@
           </tr>
         </thead>
         <tbody>
-          <!-- Ejemplo de fila -->
-          <tr>
-            <td>900123456</td>
-            <td>Juan</td>
-            <td>Pérez</td>
-            <td>1234567890</td>
-            <td>Nacional</td>
-            <td>Natural</td>
+          <tr v-for="supplier in suppliers" :key="supplier.id">
+            <td>{{ supplier.nit }}</td>
+            <td>{{ supplier.nombre }}</td>
+            <td>{{ supplier.apellido }}</td>
+            <td>{{ supplier.cedula }}</td>
+            <td>{{ supplier.tipo_proveedor }}</td>
+            <td>{{ supplier.tipo_persona }}</td>
             <td>
-              Ana López - 111222333<br />
-              Carlos Ruiz - 444555666
+              <div v-if="supplier.beneficiarios && supplier.beneficiarios.length">
+                <div v-for="b in supplier.beneficiarios" :key="b.cedula">
+                  {{ b.nombre }} - {{ b.cedula }}
+                </div>
+              </div>
             </td>
             <td>
-              Banco: Bancolombia<br />
-              Cuenta: 12345678901<br />
-              Tipo: Ahorros
+              <div v-if="supplier.datos_bancarios && supplier.datos_bancarios.length">
+                <div v-for="(d, index) in supplier.datos_bancarios" :key="d.num_cuenta">
+                  Banco: {{ d.banco }}<br />
+                  Cuenta: {{ d.num_cuenta }}<br />
+                  Tipo: {{ d.tipo_cuenta }}
+                  <hr v-if="index !== supplier.datos_bancarios.length - 1" />
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
@@ -42,6 +49,25 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const suppliers = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('/api/suppliers')
+    // ahora res.data ya es un array con objetos JSON listos para iterar
+    suppliers.value = res.data.map(s => ({
+      ...s,
+      // asegurarse de que los campos JSONB lleguen como arrays de objetos
+      beneficiarios: s.beneficiarios || [],
+      datos_bancarios: s.datos_bancarios || []
+    }))
+  } catch (error) {
+    console.error('Error al obtener proveedores:', error)
+  }
+})
 </script>
 
 <style scoped>
