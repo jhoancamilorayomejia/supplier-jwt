@@ -20,12 +20,13 @@ type Supplier struct {
 	TipoPersona    string          `json:"tipo_persona"`
 	Beneficiarios  json.RawMessage `json:"beneficiarios"`
 	DatosBancarios json.RawMessage `json:"datos_bancarios"`
+	Estado         string          `json:"estado"`
 }
 
 // ================= LISTAR =================
 func GetSuppliers(c *gin.Context) {
 	rows, err := db.DB.Query(`
-		SELECT id, nit, nombre, apellido, cedula, tipo_proveedor, tipo_persona, beneficiarios, datos_bancarios 
+		SELECT id, nit, nombre, apellido, cedula, tipo_proveedor, tipo_persona, beneficiarios, datos_bancarios, estado
 		FROM supplier
 	`)
 	if err != nil {
@@ -38,6 +39,7 @@ func GetSuppliers(c *gin.Context) {
 	for rows.Next() {
 		var s Supplier
 		var b, d []byte
+		var estado string
 
 		if err := rows.Scan(
 			&s.ID,
@@ -49,6 +51,7 @@ func GetSuppliers(c *gin.Context) {
 			&s.TipoPersona,
 			&b,
 			&d,
+			&estado,
 		); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -56,6 +59,7 @@ func GetSuppliers(c *gin.Context) {
 
 		s.Beneficiarios = b
 		s.DatosBancarios = d
+		s.Estado = estado
 		suppliers = append(suppliers, s)
 	}
 
@@ -71,10 +75,13 @@ func CreateSupplier(c *gin.Context) {
 		return
 	}
 
+	// Estado predeterminado al crear proveedor
+	supplier.Estado = "Pendiente de Validación"
+
 	query := `
 		INSERT INTO supplier 
-		(nit, nombre, apellido, cedula, tipo_proveedor, tipo_persona, beneficiarios, datos_bancarios)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+		(nit, nombre, apellido, cedula, tipo_proveedor, tipo_persona, beneficiarios, datos_bancarios, estado)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
 		RETURNING id
 	`
 
@@ -88,6 +95,7 @@ func CreateSupplier(c *gin.Context) {
 		supplier.TipoPersona,
 		supplier.Beneficiarios,
 		supplier.DatosBancarios,
+		supplier.Estado,
 	).Scan(&supplier.ID)
 
 	if err != nil {
@@ -122,8 +130,9 @@ func UpdateSupplier(c *gin.Context) {
 			tipo_proveedor=$5,
 			tipo_persona=$6,
 			beneficiarios=$7,
-			datos_bancarios=$8
-		WHERE id=$9
+			datos_bancarios=$8,
+			estado=$9
+		WHERE id=$10
 	`
 
 	_, err = db.DB.Exec(
@@ -136,6 +145,7 @@ func UpdateSupplier(c *gin.Context) {
 		supplier.TipoPersona,
 		supplier.Beneficiarios,
 		supplier.DatosBancarios,
+		supplier.Estado,
 		id,
 	)
 

@@ -24,6 +24,7 @@
             <th>Beneficiarios / Socios</th>
             <th>Datos Bancarios</th>
             <th>Acciones</th>
+            <th>Estado</th>
           </tr>
         </thead>
 
@@ -38,7 +39,7 @@
 
             <!-- BENEFICIARIOS -->
             <td>
-              <div v-if="supplier.beneficiarios && supplier.beneficiarios.length">
+              <div v-if="supplier.beneficiarios?.length">
                 <div v-for="(b, index) in supplier.beneficiarios" :key="index">
                   {{ b }}
                 </div>
@@ -48,7 +49,7 @@
 
             <!-- DATOS BANCARIOS -->
             <td>
-              <div v-if="supplier.datos_bancarios && supplier.datos_bancarios.length">
+              <div v-if="supplier.datos_bancarios?.length">
                 <div v-for="(d, index) in supplier.datos_bancarios" :key="index">
                   {{ d }}
                 </div>
@@ -60,6 +61,13 @@
             <td>
               <button class="btn-edit" @click="editarProveedor(supplier)">Editar</button>
               <button class="btn-delete" @click="eliminarProveedor(supplier.id)">Eliminar</button>
+            </td>
+
+            <!-- ESTADO -->
+            <td>
+              <button class="estado-btn" @click="abrirModalEstado(supplier)">
+                {{ supplier.estado }}
+              </button>
             </td>
           </tr>
         </tbody>
@@ -73,13 +81,12 @@
       <button class="btn-add" @click="agregarProveedor">➕ Agregar Proveedor</button>
     </div>
 
-    <!-- MODAL -->
+    <!-- MODAL AGREGAR / EDITAR -->
     <div v-if="mostrarModal" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal">
         <h2>{{ modoEdicion ? 'Editar Proveedor' : 'Agregar Proveedor' }}</h2>
 
         <form @submit.prevent="guardarProveedor">
-
           <input v-model="form.nit" placeholder="NIT" required />
           <input v-model="form.nombre" placeholder="Nombre" required />
           <input v-model="form.apellido" placeholder="Apellido" required />
@@ -87,7 +94,6 @@
           <input v-model="form.tipo_proveedor" placeholder="Tipo Proveedor" />
           <input v-model="form.tipo_persona" placeholder="Tipo Persona" />
 
-          <!-- BENEFICIARIOS -->
           <label>Beneficiarios / Socios (uno por línea)</label>
           <textarea
             v-model="form.beneficiariosTexto"
@@ -95,7 +101,6 @@
             placeholder="Juan Perez - 12345"
           ></textarea>
 
-          <!-- DATOS BANCARIOS -->
           <label>Datos Bancarios (uno por línea)</label>
           <textarea
             v-model="form.datosBancariosTexto"
@@ -112,11 +117,25 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
 
+    <!-- MODAL CAMBIO DE ESTADO (INDEPENDIENTE) -->
+    <div v-if="mostrarModalEstado" class="modal-overlay" @click.self="cerrarModalEstado">
+      <div class="modal">
+        <h2>Cambiar estado del proveedor</h2>
+        <p>Proveedor: {{ proveedorSeleccionado?.nombre }} {{ proveedorSeleccionado?.apellido }}</p>
+        <p>Nit: {{ proveedorSeleccionado?.nit }}</p>
+        <div class="modal-actions">
+          <button class="btn-add" @click="cambiarEstadoSeleccionado('Aprobado')">Aprobar</button>
+          <button class="btn-delete" @click="cambiarEstadoSeleccionado('Rechazado')">Rechazar</button>
+          <button class="btn-cancel" @click="cerrarModalEstado">Cancelar</button>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted } from 'vue'
@@ -140,6 +159,7 @@ const form = ref({
   tipo_persona: '',
   beneficiariosTexto: '',
   datosBancariosTexto: ''
+
 })
 
 // LOGOUT
@@ -202,6 +222,44 @@ const guardarProveedor = async () => {
   cargarProveedores()
 }
 
+
+const mostrarModalEstado = ref(false)
+const proveedorSeleccionado = ref(null)
+
+// Abrir modal
+const abrirModalEstado = (supplier) => {
+  proveedorSeleccionado.value = supplier
+  mostrarModalEstado.value = true
+}
+
+// Cerrar modal
+const cerrarModalEstado = () => {
+  mostrarModalEstado.value = false
+  proveedorSeleccionado.value = null
+}
+
+// Cambiar estado
+const cambiarEstadoSeleccionado = async (nuevoEstado) => {
+  const token = localStorage.getItem('token')
+  try {
+    proveedorSeleccionado.value.estado = nuevoEstado
+    await axios.put(`http://localhost:8080/api/suppliers/${proveedorSeleccionado.value.id}`, {
+      ...proveedorSeleccionado.value,
+      beneficiarios: JSON.stringify(proveedorSeleccionado.value.beneficiarios),
+      datos_bancarios: JSON.stringify(proveedorSeleccionado.value.datos_bancarios)
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    alert(`Estado actualizado a "${nuevoEstado}"`)
+    cerrarModalEstado()
+    cargarProveedores() // refrescar tabla
+  } catch (err) {
+    console.error(err)
+    alert('Error al actualizar estado')
+  }
+}
+
+
 // ELIMINAR
 const eliminarProveedor = async (id) => {
   if (!confirm('¿Eliminar proveedor?')) return
@@ -211,6 +269,8 @@ const eliminarProveedor = async (id) => {
   })
   cargarProveedores()
 }
+
+
 
 // CARGAR
 const cargarProveedores = async () => {
@@ -443,4 +503,51 @@ td div {
   background: #475569;
   border-radius: 10px;
 }
+
+.pendiente {
+  background: #f59e0b;
+  color: black;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.aprobado {
+  background: #22c55e;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+/* ================= SELECT ESTADO ================= */
+
+
+.estado-btn {
+  background: #4d4e50;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  color: rgb(0, 0, 0);
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.estado-btn.aprobado {
+  background-color: #28a745; /* verde */
+}
+
+.estado-btn.rechazado {
+  background-color: #dc3545; /* rojo */
+}
+
+.estado-btn.pendiente {
+  background-color: #868e96; /* gris más claro */
+}
+
+.estado-btn:hover {
+  opacity: 0.85;
+}
+
 </style>
