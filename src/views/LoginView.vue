@@ -20,15 +20,19 @@ const login = async () => {
       password: password.value
     })
 
+    // ✅ GUARDAR TOKEN
+    localStorage.setItem('token', response.data.token)
+
     mensaje.value = response.data.message || '✅ Login exitoso'
     router.push('/dashboard')
 
-  } catch  {
+  } catch {
     mensaje.value = '❌ Usuario o contraseña incorrectos'
   } finally {
     loading.value = false
   }
 }
+
 </script>
 
 <template>

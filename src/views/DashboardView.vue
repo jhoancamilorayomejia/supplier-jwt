@@ -2,7 +2,9 @@
   <div class="dashboard">
     <h1>📋 Lista de Proveedores</h1>
 
-    <div class="table-container">
+    <div v-if="error" class="error">{{ error }}</div>
+
+    <div class="table-container" v-if="!loading">
       <table>
         <thead>
           <tr>
@@ -24,15 +26,17 @@
             <td>{{ supplier.cedula }}</td>
             <td>{{ supplier.tipo_proveedor }}</td>
             <td>{{ supplier.tipo_persona }}</td>
+
             <td>
-              <div v-if="supplier.beneficiarios && supplier.beneficiarios.length">
+              <div v-if="supplier.beneficiarios.length">
                 <div v-for="b in supplier.beneficiarios" :key="b.cedula">
                   {{ b.nombre }} - {{ b.cedula }}
                 </div>
               </div>
             </td>
+
             <td>
-              <div v-if="supplier.datos_bancarios && supplier.datos_bancarios.length">
+              <div v-if="supplier.datos_bancarios.length">
                 <div v-for="(d, index) in supplier.datos_bancarios" :key="d.num_cuenta">
                   Banco: {{ d.banco }}<br />
                   Cuenta: {{ d.num_cuenta }}<br />
@@ -45,27 +49,56 @@
         </tbody>
       </table>
     </div>
+
+    <p v-if="loading">Cargando proveedores...</p>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 
 const suppliers = ref([])
+const loading = ref(true)
+const error = ref('')
+const router = useRouter()
 
 onMounted(async () => {
+  const token = localStorage.getItem('token')
+
+  // ✅ Si no hay token, vuelve al login
+  if (!token) {
+    router.push('/api/login')
+    return
+  }
+
   try {
-    const res = await axios.get('/api/suppliers')
-    // ahora res.data ya es un array con objetos JSON listos para iterar
+    const res = await axios.get('http://localhost:8080/api/suppliers', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
     suppliers.value = res.data.map(s => ({
       ...s,
-      // asegurarse de que los campos JSONB lleguen como arrays de objetos
-      beneficiarios: s.beneficiarios || [],
-      datos_bancarios: s.datos_bancarios || []
+      beneficiarios: typeof s.beneficiarios === 'string'
+        ? JSON.parse(s.beneficiarios)
+        : (s.beneficiarios || []),
+      datos_bancarios: typeof s.datos_bancarios === 'string'
+        ? JSON.parse(s.datos_bancarios)
+        : (s.datos_bancarios || [])
     }))
-  } catch (error) {
-    console.error('Error al obtener proveedores:', error)
+
+  } catch (err) {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token')
+      router.push('/api/login')
+    } else {
+      error.value = 'Error al cargar proveedores'
+    }
+  } finally {
+    loading.value = false
   }
 })
 </script>
@@ -76,25 +109,26 @@ onMounted(async () => {
   background: linear-gradient(135deg, #1f2937, #111827);
   padding: 30px;
   color: white;
-  box-sizing: border-box;
 }
 
 h1 {
   text-align: center;
   margin-bottom: 20px;
-  font-size: 2rem;
-  letter-spacing: 1px;
+}
+
+.error {
+  background: #dc2626;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
 .table-container {
-  width: 100%;
-  height: calc(100vh - 100px);
   overflow-x: auto;
-  overflow-y: auto;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 15px;
   padding: 15px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
 }
 
 table {
@@ -108,32 +142,11 @@ thead {
 }
 
 th, td {
-  padding: 14px 12px;
-  text-align: left;
-  vertical-align: top;
+  padding: 12px;
+  border-bottom: 1px solid #334155;
 }
 
 th {
   color: #38bdf8;
-  font-weight: 600;
-  border-bottom: 2px solid #334155;
-}
-
-tbody tr {
-  transition: background 0.3s;
-}
-
-tbody tr:nth-child(even) {
-  background: rgba(255,255,255,0.03);
-}
-
-tbody tr:hover {
-  background: rgba(56, 189, 248, 0.15);
-}
-
-td {
-  border-bottom: 1px solid #334155;
-  line-height: 1.4;
-  font-size: 0.95rem;
 }
 </style>

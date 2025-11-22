@@ -58,3 +58,15 @@ func Login(c *gin.Context) {
 		"error": "Usuario o contraseña incorrectos",
 	})
 }
+
+func ValidateToken(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+
+		// Verificamos que el método de firma sea HMAC
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, jwt.ErrSignatureInvalid
+		}
+
+		return jwtSecret, nil
+	})
+}
