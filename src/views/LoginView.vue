@@ -79,83 +79,89 @@ const login = async () => {
 }
 
 .login-box {
-  width: 480px;              /* 🔥 MÁS GRANDE */
-  padding: 60px 50px;       /* 🔥 MÁS ESPACIADO */
-  border-radius: 25px;
+  width: 380px;
+  padding: 40px;
+  border-radius: 20px;
   background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
   color: white;
   text-align: center;
 }
 
 .login-box h1 {
-  font-size: 2.8rem;        /* 🔥 TÍTULO MÁS GRANDE */
-  margin-bottom: 10px;
-  letter-spacing: 3px;
+  font-size: 2rem;
+  margin-bottom: 5px;
+  letter-spacing: 2px;
 }
 
 .login-box p {
-  color: #bbb;
-  margin-bottom: 40px;
-  font-size: 1.1rem;
+  color: #aaa;
+  margin-bottom: 30px;
 }
 
 .field {
   position: relative;
-  margin-bottom: 35px;      /* MÁS SEPARACIÓN */
+  margin-bottom: 25px;
 }
 
 .field input {
   width: 100%;
-  padding: 18px 12px;       /* INPUT MÁS GRANDE */
+  padding: 14px 10px;
   background: transparent;
   border: none;
   border-bottom: 2px solid #aaa;
   color: white;
-  font-size: 1.2rem;
+  font-size: 1rem;
 }
 
 .field label {
   position: absolute;
-  left: 12px;
+  left: 10px;
   top: 50%;
   transform: translateY(-50%);
   transition: 0.3s;
   color: #aaa;
   pointer-events: none;
-  font-size: 1.1rem;
 }
 
 .field input:focus + label,
 .field input:not(:placeholder-shown) + label {
-  top: -10px;
-  font-size: 0.85rem;
+  top: -8px;
+  font-size: 0.8rem;
   color: #4fc3f7;
+}
+
+.field input:focus {
+  outline: none;
+  border-bottom: 2px solid #4fc3f7;
 }
 
 button {
   width: 100%;
-  padding: 18px;
-  margin-top: 20px;
-  border-radius: 40px;
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 30px;
   background: linear-gradient(45deg, #4fc3f7, #00e5ff);
   border: none;
   color: #000;
   font-weight: bold;
-  font-size: 1.1rem;
   cursor: pointer;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   transition: 0.3s;
 }
 
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 button:hover {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 .mensaje {
-  margin-top: 20px;
-  font-size: 1rem;
+  margin-top: 15px;
+  font-size: 0.9rem;
 }
-
 </style>

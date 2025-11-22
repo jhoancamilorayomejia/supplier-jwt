@@ -6,7 +6,7 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/',
+      path: '/api/login', // <-- esta es la ruta para abrir en el navegador
       name: 'login',
       component: LoginView
     },
@@ -14,6 +14,10 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView
+    },
+    {
+      path: '/', // redirige automáticamente a /login
+      redirect: '/api/login'
     }
   ]
 })
