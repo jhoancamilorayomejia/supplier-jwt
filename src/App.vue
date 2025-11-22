@@ -1,85 +1,167 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import axios from 'axios'
+
+const router = useRouter()
+
+const username = ref('')
+const password = ref('')
+const mensaje = ref('')
+const loading = ref(false)
+
+const login = async () => {
+  mensaje.value = ''
+  loading.value = true
+
+  try {
+    const response = await axios.post('http://localhost:8080/api/login', {
+      username: username.value,
+      password: password.value
+    })
+
+    mensaje.value = response.data.message || '✅ Login exitoso'
+    router.push('/dashboard')
+
+  } catch  {
+    mensaje.value = '❌ Usuario o contraseña incorrectos'
+  } finally {
+    loading.value = false
+  }
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="screen">
+    <div class="login-box">
+      <h1>Login</h1>
+      <p>Acceso al sistema</p>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <form @submit.prevent="login">
+        <div class="field">
+          <input
+            type="text"
+            v-model="username"
+            required
+            placeholder=" "
+          />
+          <label>Usuario</label>
+        </div>
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+        <div class="field">
+          <input
+            type="password"
+            v-model="password"
+            required
+            placeholder=" "
+          />
+          <label>Contraseña</label>
+        </div>
+
+        <button :disabled="loading">
+          {{ loading ? 'Ingresando...' : 'INGRESAR' }}
+        </button>
+
+        <p v-if="mensaje" class="mensaje">{{ mensaje }}</p>
+      </form>
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
+.screen {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #0f2027, #203a43, #2c5364);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Segoe UI', sans-serif;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
+.login-box {
+  width: 380px;
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  color: white;
   text-align: center;
-  margin-top: 2rem;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.login-box h1 {
+  font-size: 2rem;
+  margin-bottom: 5px;
+  letter-spacing: 2px;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.login-box p {
+  color: #aaa;
+  margin-bottom: 30px;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.field {
+  position: relative;
+  margin-bottom: 25px;
 }
 
-nav a:first-of-type {
-  border: 0;
+.field input {
+  width: 100%;
+  padding: 14px 10px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid #aaa;
+  color: white;
+  font-size: 1rem;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+.field label {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: 0.3s;
+  color: #aaa;
+  pointer-events: none;
+}
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+.field input:focus + label,
+.field input:not(:placeholder-shown) + label {
+  top: -8px;
+  font-size: 0.8rem;
+  color: #4fc3f7;
+}
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.field input:focus {
+  outline: none;
+  border-bottom: 2px solid #4fc3f7;
+}
 
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 30px;
+  background: linear-gradient(45deg, #4fc3f7, #00e5ff);
+  border: none;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: 0.3s;
+}
 
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+.mensaje {
+  margin-top: 15px;
+  font-size: 0.9rem;
 }
 </style>
