@@ -50,24 +50,27 @@ func main() {
 
 	r := gin.Default()
 
-	// CORS
+	// CORS CORRECTO
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(http.StatusNoContent)
+			c.AbortWithStatus(200)
 			return
 		}
 		c.Next()
 	})
 
-	// ✅ Endpoint público
+	// Endpoint público
 	r.POST("/api/login", controllers.Login)
 
-	// ✅ Endpoint protegido con JWT
+	// Endpoints protegidos
 	r.GET("/api/suppliers", AuthMiddleware(), controllers.GetSuppliers)
+	r.POST("/api/suppliers", AuthMiddleware(), controllers.CreateSupplier)
+	r.PUT("/api/suppliers/:id", AuthMiddleware(), controllers.UpdateSupplier)
+	r.DELETE("/api/suppliers/:id", AuthMiddleware(), controllers.DeleteSupplier)
 
 	log.Println("Servidor corriendo en http://localhost:8080")
 	r.Run(":8080")
