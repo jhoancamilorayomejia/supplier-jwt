@@ -2,9 +2,14 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
+
+// Secret key para firmar los tokens (en producción usa variable de entorno)
+var jwtSecret = []byte("mi_clave_secreta_super_segura")
 
 // Estructura para recibir los datos del login
 type LoginRequest struct {
@@ -26,9 +31,25 @@ func Login(c *gin.Context) {
 
 	// Credenciales predeterminadas
 	if req.Username == "admin" && req.Password == "1234" {
+		// Crear el token JWT
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"username": req.Username,
+			"exp":      time.Now().Add(time.Hour * 24).Unix(), // Expira en 24 horas
+		})
+
+		// Firmar el token con la clave secreta
+		tokenString, err := token.SignedString(jwtSecret)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": "No se pudo generar el token",
+			})
+			return
+		}
+
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Login exitoso",
 			"user":    req.Username,
+			"token":   tokenString,
 		})
 		return
 	}
