@@ -29,7 +29,18 @@ const login = async () => {
     mensaje.value = response.data.message || '✅ Login exitoso'
 
     // Redirigir a dashboard
-    router.push('/dashboard')
+    // Guardar rol
+localStorage.setItem('rol', response.data.rol)
+
+// Redirección según rol
+if (response.data.rol === 'admin') {
+  router.push('/dashboard')             // ✅ Admin
+} else if (response.data.rol === 'proveedor') {
+  router.push('/dashboard-proveedor')  // ✅ Proveedor
+} else {
+  mensaje.value = 'Rol no reconocido'
+}
+
   } catch {
     mensaje.value = '❌ Usuario o contraseña incorrectos'
   } finally {
