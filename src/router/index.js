@@ -17,7 +17,7 @@ const router = createRouter({
       component: DashboardView
     },
     {
-      path: '/dashboard-proveedor', // ✅ NUEVA RUTA
+      path: '/api/proyectos', // ✅ NUEVA RUTA
       name: 'dashboard-proveedor',
       component: DashboardProveedor
     },

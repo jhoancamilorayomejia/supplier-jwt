@@ -34,9 +34,9 @@ localStorage.setItem('rol', response.data.rol)
 
 // Redirección según rol
 if (response.data.rol === 'admin') {
-  router.push('/dashboard')             // ✅ Admin
+  router.push('/dashboard')            
 } else if (response.data.rol === 'proveedor') {
-  router.push('/dashboard-proveedor')  // ✅ Proveedor
+  router.push('/api/proyectos')
 } else {
   mensaje.value = 'Rol no reconocido'
 }
