@@ -5,10 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"supplier-jwt/db" // tu conexión a la DB
+	"supplier-jwt/db"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Clave secreta para JWT
@@ -23,36 +24,37 @@ type LoginRequest struct {
 // Estructura de usuario desde la DB
 type User struct {
 	Username string
-	Password string
+	Password string // aquí viene el HASH encriptado desde PostgreSQL
 	Rol      string
 }
 
-// Handler de login
+// ========================= LOGIN =========================
 func Login(c *gin.Context) {
 	var req LoginRequest
 
-	// Leer JSON enviado desde Vue
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
 		return
 	}
 
-	// Buscar usuario en la DB
 	var user User
-	err := db.DB.QueryRow("SELECT username, password, rol FROM \"user\" WHERE username=$1", req.Username).
-		Scan(&user.Username, &user.Password, &user.Rol)
+	err := db.DB.QueryRow(
+		`SELECT username, password, rol FROM "user" WHERE username=$1`,
+		req.Username,
+	).Scan(&user.Username, &user.Password, &user.Rol)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuario o contraseña incorrectos"})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al consultar la base de datos"})
 		}
 		return
 	}
 
-	// Verificar contraseña directamente
-	if req.Password != user.Password {
+	// ✅ COMPARAR CONTRASEÑA PLANA CON HASH BCRYPT
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Usuario o contraseña incorrectos"})
 		return
 	}
@@ -78,7 +80,7 @@ func Login(c *gin.Context) {
 	})
 }
 
-// Función para validar JWT
+// ========================= VALIDAR TOKEN =========================
 func ValidateToken(tokenString string) (*jwt.Token, error) {
 	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

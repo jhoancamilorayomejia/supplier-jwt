@@ -63,7 +63,7 @@ func main() {
 		c.Next()
 	})
 
-	// Endpoint público
+	// Endpoint publico
 	r.POST("/api/login", controllers.Login)
 
 	// Endpoints protegidos
@@ -71,6 +71,9 @@ func main() {
 	r.POST("/api/suppliers", AuthMiddleware(), controllers.CreateSupplier)
 	r.PUT("/api/suppliers/:id", AuthMiddleware(), controllers.UpdateSupplier)
 	r.DELETE("/api/suppliers/:id", AuthMiddleware(), controllers.DeleteSupplier)
+
+	//para proyectos
+	r.GET("/api/proyectos", AuthMiddleware(), controllers.GetSuppliers2)
 
 	log.Println("Servidor corriendo en http://localhost:8080")
 	r.Run(":8080")
